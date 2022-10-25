@@ -108,7 +108,7 @@
 
     emacs-overlay = {
       url = "github:nix-community/emacs-overlay";
-      inputs.flake-utils.follows = "flake-utils"
+      inputs.flake-utils.follows = "flake-utils";
     };
 
     stylix.url = "github:danth/stylix";
@@ -159,7 +159,7 @@
           channelName = "nixos";
           imports = [ (digga.lib.importExportableModules ./modules) ];
           modules = [
-            { lib.our = self.lib }
+            { lib.our = self.lib; }
             digga.nixosModules.bootstrapIso
             digga.nixosModules.nixConfig
             home-manager.nixosModules.home-manager
