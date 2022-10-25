@@ -141,11 +141,11 @@
       ];
 
       channels = {
-        nixos: {
+        nixos = {
           imports = [ (digga.lib.importOverlays ./overlays) ];
           overlays = [ ];
         };
-        nixos-unstable: {
+        nixos-unstable = {
           imports = [ (digga.lib.importOverlays ./overlays) ];
           overlays = [ ];
         };
