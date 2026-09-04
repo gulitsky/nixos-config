@@ -19,6 +19,10 @@
     helium # из флейка inputs.helium (в nixpkgs его нет)
     # claude-code даёт programs.claude-code ниже — вторая запись здесь лишняя
     inputs.fresh.packages.${pkgs.stdenv.hostPlatform.system}.default # Fresh IDE: терминальный редактор
+    # LSP для .nix. Fresh поднимает его сам и зовёт именно `nil` (nixd у него
+    # значится альтернативой, команду пришлось бы прописывать руками), поэтому
+    # пакет нужен в PATH сессии: из devShell он виден только в `nix develop`.
+    nil
     ripgrep
     fd
     jq

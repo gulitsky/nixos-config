@@ -63,6 +63,9 @@
               sops
               age
               ssh-to-age
+              # Два языковых сервера для nix намеренно: nil быстрый и умеет
+              # rename, nixd умеет вычислять опции NixOS/home-manager.
+              nil
               nixd
               statix
               deadnix
