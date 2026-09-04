@@ -27,6 +27,10 @@ in
         "/etc/ssh"
         "/var/lib/bluetooth"
         "/var/lib/fprint"
+        # known-networks iwd (networkmanager.wifi.backend = "iwd"): часть
+        # сетей iwd провиженит сам, и без персиста они отваливаются после
+        # ребута, хотя профиль в system-connections на месте.
+        "/var/lib/iwd"
         "/var/lib/nixos" # uid/gid маппинги — иначе они поедут после reboot
         "/var/lib/sbctl" # ключи Secure Boot
         "/var/lib/pcrlock.d" # измерения systemd-pcrlock (my.secureboot.measuredBoot)
