@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 {
   # ThinkPad T14 Gen 1 (AMD), 20UD/20UE — Ryzen 5 PRO 4650U «Renoir», Vega iGPU.
   # Проверь список модулей после установки:
@@ -13,6 +13,16 @@
     # только USB4-less USB-C. У Intel-версии — нужен.
   ];
   boot.kernelModules = [ "kvm-amd" ];
+
+  # Свежий mainline вместо дефолтного 6.18 LTS. Проверено на linux-config-7.2.2:
+  # SCHED_CLASS_EXT=y (нужно для my.profiles.laptop.scx), HZ=1000, PREEMPT_LAZY=y —
+  # то есть всё, за чем обычно идут в linux_zen, тут уже есть, а amdgpu новее.
+  #
+  # Плата: атрибут не пинует версию, `nix flake update` может увести ядро на
+  # следующий мажор. Если после обновления на Renoir полезли артефакты на eDP —
+  # раскомментируй amdgpu.dcdebugmask ниже; до выяснения грузись предыдущей
+  # генерацией (их в меню держится 10, см. features/secureboot.nix).
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   hardware.cpu.amd.updateMicrocode = true;
   hardware.enableRedistributableFirmware = true;

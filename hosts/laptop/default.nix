@@ -24,7 +24,10 @@
       tpm2Unlock.enable = true; # шаг 7: сначала systemd-cryptenroll
       measuredBoot.enable = false; # шаг 8, опционально: политика PCR 0/4/7
     };
-    profiles.laptop.enable = true;
+    profiles.laptop = {
+      enable = true;
+      scx.enable = true; # sched_ext вместо смены ядра на zen/cachyos
+    };
     profiles.niri.enable = true;
     thinkpad.enable = true;
   };
