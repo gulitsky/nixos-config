@@ -4,6 +4,9 @@
   lib,
   ...
 }:
+let
+  wpctl = lib.getExe' pkgs.wireplumber "wpctl";
+in
 {
   # niri не имеет модуля в nixpkgs/home-manager для типизированного конфига —
   # пишем KDL напрямую. Альтернатива: input niri-flake (sodiboo), он даёт
@@ -170,10 +173,13 @@
 
         // Аппаратные клавиши T14. allow-when-locked нужен, иначе
         // с залоченного экрана не убавить звук.
-        XF86AudioRaiseVolume allow-when-locked=true { spawn "${lib.getExe pkgs.pamixer}" "-i" "5"; }
-        XF86AudioLowerVolume allow-when-locked=true { spawn "${lib.getExe pkgs.pamixer}" "-d" "5"; }
-        XF86AudioMute        allow-when-locked=true { spawn "${lib.getExe pkgs.pamixer}" "-t"; }
-        XF86AudioMicMute     allow-when-locked=true { spawn "${lib.getExe pkgs.pamixer}" "--default-source" "-t"; }
+        // wpctl (WirePlumber) вместо pamixer: тот ходил через libpulse и
+        // pipewire-pulse. `-l 1.0` обязателен — без него wpctl уводит
+        // громкость выше 100% и звук клиппит; pamixer упирался в 100 сам.
+        XF86AudioRaiseVolume allow-when-locked=true { spawn "${wpctl}" "set-volume" "-l" "1.0" "@DEFAULT_AUDIO_SINK@" "5%+"; }
+        XF86AudioLowerVolume allow-when-locked=true { spawn "${wpctl}" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
+        XF86AudioMute        allow-when-locked=true { spawn "${wpctl}" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+        XF86AudioMicMute     allow-when-locked=true { spawn "${wpctl}" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
         XF86MonBrightnessUp   allow-when-locked=true { spawn "${lib.getExe pkgs.brightnessctl}" "set" "5%+"; }
         XF86MonBrightnessDown allow-when-locked=true { spawn "${lib.getExe pkgs.brightnessctl}" "set" "5%-"; }
 
@@ -431,7 +437,12 @@
       width = 44;
       modules-left = [ "niri/workspaces" ];
       modules-right = [
-        "pulseaudio"
+        # Нативный модуль WirePlumber вместо "pulseaudio": тот ходит через
+        # libpulse и pipewire-pulse. Прослойка рабочая (и services.pipewire.pulse
+        # выключать нельзя — через него ходят браузеры и Electron), просто
+        # панели она не нужна. Взамен теряются иконки по типу порта
+        # (наушники/HDMI) — их тут всё равно не было.
+        "wireplumber"
         "battery"
         "clock"
         "tray"
@@ -454,16 +465,17 @@
         };
       };
 
-      pulseaudio = {
+      wireplumber = {
         format = "{icon}\n{volume}";
         justify = "center";
         format-muted = "󰝟";
-        format-icons.default = [
+        # У wireplumber-модуля это плоский список, а не attrs с .default.
+        format-icons = [
           "󰕿"
           "󰖀"
           "󰕾"
         ];
-        on-click = "${lib.getExe pkgs.pamixer} -t";
+        on-click = "${wpctl} set-mute @DEFAULT_AUDIO_SINK@ toggle";
       };
 
       clock = {
@@ -493,7 +505,7 @@
       #workspaces button { padding: 4px 0; margin: 2px 4px; }
       #workspaces button.focused { background: #45475a; }
       #battery.critical { color: #f38ba8; }
-      #clock, #battery, #pulseaudio, #tray { padding: 8px 0; }
+      #clock, #battery, #wireplumber, #tray { padding: 8px 0; }
     '';
   };
 

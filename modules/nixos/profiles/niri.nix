@@ -72,7 +72,6 @@ in
       cliphist
       brightnessctl
       playerctl
-      pamixer
       grim
       slurp
       xdg-utils
