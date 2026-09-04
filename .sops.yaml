@@ -1,0 +1,13 @@
+# Заполнено на шаге 4 (см. README). Как получить ключи заново:
+#   ssh-to-age -i /etc/ssh/ssh_host_ed25519_key.pub   # ключ хоста
+#   age-keygen -y ~/.config/sops/age/keys.txt          # твой личный ключ
+keys:
+  - &admin_andrey age1e2uvwawjm5nugwwsyjss0qg9xzg4pcrvpp8qydpver6e2ed22a6sktndn7
+  - &host_laptop age1zdc4k7wcay3nlmq93p90nypm4g9hz0puxrg5kaz6qe480wlepu5qgfk7fz
+
+creation_rules:
+  - path_regex: secrets/secrets\.yaml$
+    key_groups:
+      - age:
+          - *admin_andrey
+          - *host_laptop
