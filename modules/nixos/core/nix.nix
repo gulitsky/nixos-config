@@ -17,8 +17,6 @@
       options = "--delete-older-than 30d";
     };
 
-    # nix registry / NIX_PATH указывают на тот же nixpkgs, что и система:
-    # `nix shell nixpkgs#foo` не тянет второй чекаут.
     registry.nixpkgs.flake = inputs.nixpkgs;
     nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
   };
