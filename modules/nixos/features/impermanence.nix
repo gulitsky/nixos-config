@@ -31,6 +31,9 @@ in
         # сетей iwd провиженит сам, и без персиста они отваливаются после
         # ребута, хотя профиль в system-connections на месте.
         "/var/lib/iwd"
+        # timestamps/seen-bssids NM: по ним он ранжирует профили при
+        # автоподключении, плюс secret_key для стабильных cloned-MAC.
+        "/var/lib/NetworkManager"
         "/var/lib/nixos" # uid/gid маппинги — иначе они поедут после reboot
         "/var/lib/sbctl" # ключи Secure Boot
         "/var/lib/pcrlock.d" # измерения systemd-pcrlock (my.secureboot.measuredBoot)
