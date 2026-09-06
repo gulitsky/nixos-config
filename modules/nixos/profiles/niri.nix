@@ -82,13 +82,17 @@ in
       enableDefaultPackages = true;
       packages = with pkgs; [
         inter
-        jetbrains-mono
-        nerd-fonts.jetbrains-mono
+        # Cascadia из Windows Terminal. Один пакет даёт всю семью:
+        # Cascadia Code (с лигатурами), Cascadia Mono (без них) и варианты
+        # NF/PL с зашитыми глифами Nerd Fonts — отдельный nerd-fonts-пакет
+        # не нужен. По умолчанию берём Mono: это дефолт самого Windows
+        # Terminal, а foot лигатуры всё равно не рисует.
+        cascadia-code
         noto-fonts
         noto-fonts-color-emoji
       ];
       fontconfig.defaultFonts = {
-        monospace = [ "JetBrains Mono" ];
+        monospace = [ "Cascadia Mono" ];
         sansSerif = [ "Inter" ];
       };
     };

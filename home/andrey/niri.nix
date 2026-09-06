@@ -257,7 +257,7 @@ in
            поверх лезет Adwaita. Раз сброшено всё, шрифт задаём тут же. */
         * {
           all: unset;
-          font-family: "Inter", "JetBrainsMono Nerd Font";
+          font-family: "Inter", "Cascadia Mono NF";
           font-size: 12px;
         }
 
@@ -494,7 +494,7 @@ in
 
     style = ''
       * {
-        font-family: "Inter", "JetBrainsMono Nerd Font";
+        font-family: "Inter", "Cascadia Mono NF";
         font-size: 12px;
       }
       window#waybar {

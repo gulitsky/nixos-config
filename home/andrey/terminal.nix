@@ -27,7 +27,7 @@ _: {
     settings = {
       main = {
         term = "foot";
-        font = "JetBrains Mono:size=11";
+        font = "Cascadia Mono NF:size=11";
         dpi-aware = "no";
         pad = "8x8";
       };
