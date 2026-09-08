@@ -6,6 +6,38 @@
 }:
 let
   wpctl = lib.getExe' pkgs.wireplumber "wpctl";
+  niri = lib.getExe pkgs.niri;
+
+  # Раскладки перечислены один раз: отсюда собирается и xkb-строка для niri,
+  # и подписи индикатора в waybar. Иначе третья раскладка добавляется в двух
+  # местах, и рано или поздно они разъезжаются.
+  layouts = [
+    "us"
+    "ru"
+  ];
+
+  # Модуля раскладки для niri в waybar нет: sway/language и hyprland/language
+  # ходят в IPC своих композиторов. Зато у niri есть свой: event-stream при
+  # подключении отдаёт KeyboardLayoutsChanged со всем списком и текущим
+  # индексом, а дальше на каждое переключение — KeyboardLayoutSwitched с одним
+  # индексом. Один процесс jq держит состояние в аккумуляторе foreach и печатает
+  # строку только на этих двух событиях (остальных в потоке — десятки в секунду
+  # при возне окнами), так что опроса по таймеру нет вообще.
+  layoutIndicator = pkgs.writeShellScript "niri-layout-indicator" ''
+    ${niri} msg -j event-stream | ${lib.getExe pkgs.jq} -n -c --unbuffered \
+      --argjson labels '${builtins.toJSON (map lib.toUpper layouts)}' '
+        foreach inputs as $e ({ idx: 0, names: [], show: false };
+          if $e.KeyboardLayoutsChanged then
+            $e.KeyboardLayoutsChanged.keyboard_layouts
+            | { idx: .current_idx, names: .names, show: true }
+          elif $e.KeyboardLayoutSwitched then
+            .idx = $e.KeyboardLayoutSwitched.idx | .show = true
+          else
+            .show = false
+          end;
+          select(.show) | { text: ($labels[.idx] // "??"), tooltip: (.names[.idx] // "") }
+        )'
+  '';
 in
 {
   # niri не имеет модуля в nixpkgs/home-manager для типизированного конфига —
@@ -15,7 +47,7 @@ in
     input {
         keyboard {
             xkb {
-                layout "us,ru"
+                layout "${lib.concatStringsSep "," layouts}"
                 // CapsLock переключает раскладку (Shift+CapsLock — сам CapsLock).
                 // ctrl:nocaps убран: одна клавиша не может быть и Ctrl,
                 // и переключателем групп.
@@ -437,6 +469,7 @@ in
       width = 44;
       modules-left = [ "niri/workspaces" ];
       modules-right = [
+        "custom/layout"
         # Нативный модуль WirePlumber вместо "pulseaudio": тот ходит через
         # libpulse и pipewire-pulse. Прослойка рабочая (и services.pipewire.pulse
         # выключать нельзя — через него ходят браузеры и Electron), просто
@@ -447,6 +480,17 @@ in
         "clock"
         "tray"
       ];
+
+      "custom/layout" = {
+        exec = layoutIndicator;
+        return-type = "json";
+        justify = "center";
+        # Скрипт умирает вместе с event-stream, когда niri перезапускается.
+        # Без restart-interval waybar его больше не поднимет, и индикатор
+        # молча замрёт на последней раскладке.
+        restart-interval = 1;
+        on-click = "${niri} msg action switch-layout next";
+      };
 
       battery = {
         format = "{icon}\n{capacity}";
@@ -505,7 +549,7 @@ in
       #workspaces button { padding: 4px 0; margin: 2px 4px; }
       #workspaces button.focused { background: #45475a; }
       #battery.critical { color: #f38ba8; }
-      #clock, #battery, #wireplumber, #tray { padding: 8px 0; }
+      #clock, #battery, #wireplumber, #tray, #custom-layout { padding: 8px 0; }
     '';
   };
 
