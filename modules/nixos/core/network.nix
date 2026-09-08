@@ -1,26 +1,30 @@
+{ pkgs, ... }:
 {
-  networking.networkmanager = {
-    enable = true;
-    # Суппликант, а не менеджер соединений: профили, VPN, ModemManager и
-    # per-connection DNS в resolved остаются за NM. iwd на iwlwifi быстрее
-    # коннектится после resume и аккуратнее роумит между AP (802.11r/k/v),
-    # чего от wpa_supplicant годами не удаётся добиться.
-    # Цена: у связки NM+iwd урезан 802.1X (часть EAP-методов требует
-    # provisioning-файлов iwd, а не профиля NM) и хуже AP-режим для hotspot.
-    # Откат — вернуть "wpa_supplicant"; состояние NM при этом не теряется.
-    wifi.backend = "iwd";
-  };
+  # Сеть держат два независимых демона вместо NetworkManager:
+  #   iwd      — только wifi: аутентификация, роуминг (802.11r/k/v), autoconnect
+  #              по своим known-networks в /var/lib/iwd;
+  #   networkd — адресация: DHCP и IPv6 RA на всех интерфейсах, включая wlan0.
+  # NM тут был лишним слоем: VPN, ModemManager и per-connection настройки не
+  # используются, а его профили — императивное состояние, которое приходилось
+  # персистить и которое умело плодить дубликаты («SSID», «SSID 1») при смене
+  # имени интерфейса. Откат — networking.networkmanager.enable = true с
+  # wifi.backend = "iwd"; known-networks iwd при этом переживают переключение.
+  networking.wireless.iwd.enable = true;
 
-  # По умолчанию NM отдаёт автоподключение самому iwd (device.wifi.iwd.autoconnect
-  # = true) и своих попыток не делает. На практике iwd успевает стартовать
-  # autoconnect до того, как NM сопоставит сеть с профилем, NM обрывает эту
-  # попытку — и больше никто не пробует: после boot и после resume wlan0 висит
-  # disconnected, пока не ткнёшь в сеть руками. Возвращаем автоподключение
-  # в NM: он ходит по своим профилям с их autoconnect-priority и retries,
-  # а iwd остаётся только суппликантом.
-  networking.networkmanager.settings.device."wifi.iwd.autoconnect" = false;
+  # EnableNetworkConfiguration у iwd намеренно не включаем: DHCP-клиент в
+  # системе должен быть один. Иначе на wlan0 за адрес дерутся iwd и networkd.
+  networking.useNetworkd = true;
 
-  networking.firewall.enable = true;
+  # networking.useDHCP оставлен в дефолтном true: он раскрывается в две
+  # generic-сети networkd — "99-ethernet-default-dhcp" (Type=ether, то есть
+  # и док, и USB-тетеринг с телефона) и "99-wireless-client-dhcp" (метрика
+  # маршрута 1025, поэтому провод выигрывает у wifi, когда есть оба).
+  # Он же включает --any у systemd-networkd-wait-online, иначе boot без дока
+  # ждал бы поднятия enp* до таймаута.
+
+  # Замена nmtui — impala: iwctl умеет всё то же, но сканирование и ввод
+  # пароля в нём — три команды вместо списка сетей.
+  environment.systemPackages = [ pkgs.impala ];
 
   services.resolved = {
     enable = true;
@@ -29,4 +33,6 @@
       DNSOverTLS = "opportunistic";
     };
   };
+
+  networking.firewall.enable = true;
 }

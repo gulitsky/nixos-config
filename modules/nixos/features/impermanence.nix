@@ -22,18 +22,14 @@ in
       hideMounts = true;
 
       directories = [
-        "/etc/NetworkManager/system-connections"
         "/etc/nixos"
         "/etc/ssh"
         "/var/lib/bluetooth"
         "/var/lib/fprint"
-        # known-networks iwd (networkmanager.wifi.backend = "iwd"): часть
-        # сетей iwd провиженит сам, и без персиста они отваливаются после
-        # ребута, хотя профиль в system-connections на месте.
+        # known-networks iwd: SSID, PSK и last-connected. Единственное
+        # состояние сети, которое надо пережить ребут, — адресацию networkd
+        # берёт из DHCP, а его .network-файлы декларативны.
         "/var/lib/iwd"
-        # timestamps/seen-bssids NM: по ним он ранжирует профили при
-        # автоподключении, плюс secret_key для стабильных cloned-MAC.
-        "/var/lib/NetworkManager"
         "/var/lib/nixos" # uid/gid маппинги — иначе они поедут после reboot
         "/var/lib/sbctl" # ключи Secure Boot
         "/var/lib/pcrlock.d" # измерения systemd-pcrlock (my.secureboot.measuredBoot)

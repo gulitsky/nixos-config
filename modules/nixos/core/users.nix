@@ -15,7 +15,6 @@
     description = "Andrey";
     extraGroups = [
       "wheel"
-      "networkmanager"
       "video"
       "audio"
     ];
