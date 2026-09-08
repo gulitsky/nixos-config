@@ -39,6 +39,15 @@ in
         # (/var/lib/libvirt/swtpm). Без него Windows после ребута хоста
         # встретит «TPM устройство изменено», а BitLocker — recovery-экран.
         "/var/lib/libvirt"
+        {
+          # Локальный CA swtpm: им подписаны EK-сертификаты в состоянии
+          # гостевых TPM, которое лежит рядом в /var/lib/libvirt. Пересоздать
+          # каталог недолго, но тогда CA будет новый на каждую загрузку.
+          directory = "/var/lib/swtpm-localca";
+          user = "tss";
+          group = "tss";
+          mode = "0750";
+        }
         "/var/lib/nixos" # uid/gid маппинги — иначе они поедут после reboot
         "/var/lib/sbctl" # ключи Secure Boot
         "/var/lib/pcrlock.d" # измерения systemd-pcrlock (my.secureboot.measuredBoot)

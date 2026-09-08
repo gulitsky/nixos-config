@@ -30,6 +30,24 @@ in
     # удалён и на него стоит assertion. Все образы прошивки, включая
     # secure-boot вариант для Windows 11, приезжают вместе с QEMU.
 
+    # swtpm выпускает виртуальному TPM сертификаты EK и platform через свой
+    # локальный CA, а ключ этого CA держит в /var/lib/swtpm-localca. Каталог не
+    # создаёт никто: libvirt запускает swtpm от пользователя tss, а тот не может
+    # сделать mkdir в /var/lib. Итог — создание домена падает на swtpm_setup с
+    # exitstatus 1, а настоящая причина видна только в /var/log/swtpm (доступном
+    # одному root): «Could not create directory for statedir».
+    systemd.tmpfiles.rules = [ "d /var/lib/swtpm-localca 0750 tss tss -" ];
+
+    # Пользователя tss заводит security.tpm2 — он включён ради разблокировки
+    # диска по TPM. Если это когда-нибудь разъедется, лучше упасть на
+    # вычислении, чем на первом создании виртуалки.
+    assertions = [
+      {
+        assertion = config.users.users ? tss;
+        message = "my.libvirt: swtpm работает от пользователя tss, его заводит security.tpm2.";
+      }
+    ];
+
     programs.virt-manager.enable = true;
     users.users.${config.my.username}.extraGroups = [ "libvirtd" ];
 
