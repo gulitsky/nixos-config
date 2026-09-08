@@ -62,4 +62,29 @@
     enable = true;
     enableFishIntegration = true;
   };
+
+  # Файловый менеджер. TUI под остальной набор (foot + fish + Fresh): открывается
+  # в том же окне, ходит теми же fd/rg/fzf/zoxide, что уже стоят.
+  #
+  # extraPackages не нужен: пакет в nixpkgs уже завёрнут вместе с
+  # превьюшниками — ffmpeg, poppler-utils, imagemagick, resvg, chafa, 7zz, file.
+  # Картинки foot показывает честно, сикселями, а не ASCII-заглушкой chafa.
+  programs.yazi = {
+    enable = true;
+
+    # Обёртка на fish: сам yazi сменить каталог родительской оболочке не может,
+    # поэтому пишет итоговый cwd в файл, а функция делает по нему cd.
+    enableFishIntegration = true;
+
+    # Явно, хотя "y" — и есть новый дефолт: со stateVersion ниже 26.05
+    # home-manager отдаёт унаследованное "yy" и вешает warning.
+    shellWrapperName = "y";
+
+    settings.mgr = {
+      # В конфигах и дотфайлах скрытых файлов больше, чем видимых, — прятать их
+      # в файловом менеджере этого репозитория бессмысленно.
+      show_hidden = true;
+      sort_dir_first = true;
+    };
+  };
 }
