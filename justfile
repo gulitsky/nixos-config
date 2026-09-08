@@ -61,6 +61,15 @@ win-create iso virtio="$HOME/Downloads/virtio-win.iso" name="win11" disk="100" r
       --graphics spice --video qxl \
       --noautoconsole
 
-# Открыть консоль виртуалки
+# Проверка состояния идёт через `list --state-running --name`, а не через
+# `domstate`: та печатает состояние словами и на языке локали.
+#
+# Запустить виртуалку и открыть её консоль
 win name="win11":
+    virsh --connect qemu:///system list --state-running --name | grep -qx {{name}} \
+      || virsh --connect qemu:///system start {{name}}
     virt-manager --connect qemu:///system --show-domain-console {{name}}
+
+# Выключить виртуалку: ACPI-кнопка питания, Windows завершается штатно
+win-off name="win11":
+    virsh --connect qemu:///system shutdown {{name}}

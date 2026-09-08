@@ -480,7 +480,8 @@ Windows-VM: CryptoPro CSP, плагин CAdES, браузер, НП ЮЛ, СФР
 
     just virtio-iso                                  # ISO с драйверами из nixpkgs
     just win-create ~/Downloads/win11.iso            # домен: q35, UEFI+SB, TPM 2.0, virtio
-    just win                                         # консоль
+    just win                                         # запустить и открыть консоль
+    just win-off                                     # штатно выключить
 
 ISO Windows качается отдельно; если под рукой нет, `nix shell nixpkgs#quickemu -c
 quickget windows 11` умеет это сам (сам quickemu как гипервизор тут не нужен).
@@ -517,6 +518,19 @@ Windows: CryptoPro CSP → серийник → «КриптоПро ЭЦП Brow
   platform-сертификаты своим локальным CA в `/var/lib/swtpm-localca`, а создать
   этот каталог от пользователя `tss` не может. Каталог теперь заводится
   tmpfiles-правилом в `features/libvirt.nix` и персистится.
+- Автозапуск домена выключен намеренно: машина нужна несколько раз в год и
+  подниматься вместе с ноутбуком не должна. `just win` стартует её сам, если
+  она погашена.
+- Токен в XML домена не прописан, поэтому подключается заново каждый сеанс
+  (Add Hardware → USB Host Device). Надоест — прописать навсегда:
+  `virt-xml --connect qemu:///system win11 --add-device --hostdev 0a89:0025,startupPolicy=optional`.
+  `startupPolicy=optional` обязателен, иначе домен не стартует без воткнутого
+  Рутокена.
+- Перед обновлением CSP или НП ЮЛ имеет смысл скопировать диск. Снапшоты
+  libvirt тут не помощники: внутренние не работают с UEFI-прошивкой на pflash,
+  а внешние потом неудобно откатывать. Диск лежит на btrfs, поэтому копия
+  бесплатна: `sudo cp --reflink=always /var/lib/libvirt/images/win11.qcow2
+  /var/lib/libvirt/images/win11-$(date +%F).qcow2`.
 - Диск гостя — состояние, которое флейк не воспроизводит. Он в
   `/var/lib/libvirt/images`, то есть в persist, но в бэкап его класть надо
   отдельно: там и лицензия CSP, и настроенный НП ЮЛ.
