@@ -35,6 +35,10 @@ in
         # состояние сети, которое надо пережить ребут, — адресацию networkd
         # берёт из DHCP, а его .network-файлы декларативны.
         "/var/lib/iwd"
+        # Диски гостей, XML доменов и состояние эмулированного TPM
+        # (/var/lib/libvirt/swtpm). Без него Windows после ребута хоста
+        # встретит «TPM устройство изменено», а BitLocker — recovery-экран.
+        "/var/lib/libvirt"
         "/var/lib/nixos" # uid/gid маппинги — иначе они поедут после reboot
         "/var/lib/sbctl" # ключи Secure Boot
         "/var/lib/pcrlock.d" # измерения systemd-pcrlock (my.secureboot.measuredBoot)

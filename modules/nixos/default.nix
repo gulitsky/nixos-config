@@ -4,6 +4,7 @@
     ./core
     ./features/containers.nix
     ./features/impermanence.nix
+    ./features/libvirt.nix
     ./features/secureboot.nix
     ./features/secrets.nix
     ./features/thinkpad.nix

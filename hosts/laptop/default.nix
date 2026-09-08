@@ -18,6 +18,7 @@
     username = "andrey";
     containers.enable = true;
     impermanence.enable = true;
+    libvirt.enable = true;
     secrets.enable = true; # secrets/secrets.yaml зашифрован (шаг 4)
     secureboot = {
       enable = true; # шаг 6: сначала Setup Mode + sbctl create-keys
