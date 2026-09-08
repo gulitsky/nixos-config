@@ -7,6 +7,7 @@
     ./features/secureboot.nix
     ./features/secrets.nix
     ./features/thinkpad.nix
+    ./features/v2raya.nix
     ./profiles/laptop.nix
     ./profiles/niri.nix
   ];

@@ -30,5 +30,6 @@
     };
     profiles.niri.enable = true;
     thinkpad.enable = true;
+    v2raya.enable = true;
   };
 }
