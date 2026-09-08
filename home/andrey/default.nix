@@ -27,6 +27,10 @@
     fd
     jq
     htop
+    # Архивы одной командой вместо памяти на флаги tar/unzip/zstd: формат ouch
+    # берёт из расширения (`ouch c dir out.tar.zst`, `ouch d any.zip`, `ouch l`).
+    # 7z и rar ему не по силам — их распаковывает 7zz, он уже пришёл с yazi.
+    ouch
     python3 # для разовых скриптов; проектные зависимости — через devShell
     just
     glab
