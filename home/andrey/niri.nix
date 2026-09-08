@@ -7,6 +7,7 @@
 let
   wpctl = lib.getExe' pkgs.wireplumber "wpctl";
   niri = lib.getExe pkgs.niri;
+  systemctl = lib.getExe' pkgs.systemd "systemctl";
 
   # Раскладки перечислены один раз: отсюда собирается и xkb-строка для niri,
   # и подписи индикатора в waybar. Иначе третья раскладка добавляется в двух
@@ -265,8 +266,80 @@ in
     terminal_cmd = "${lib.getExe' pkgs.foot "footclient"}"
   '';
 
+  # Провайдер menus читает ~/.config/elephant/menus/*.toml. Пункты питания
+  # оформлены меню, а не .desktop-файлами: .desktop висел бы в списке
+  # приложений всегда и во всех лаунчерах, а меню видно только по запросу.
+  xdg.configFile."elephant/menus/power.toml".text = ''
+    name = "power"
+    name_pretty = "Питание"
+    icon = "system-shutdown-symbolic"
+    # Искать ещё и по имени меню — чтобы оба пункта находились по "power"
+    # и "питание", а не только по собственному тексту.
+    search_name = true
+
+    # Команды перечислены таблицами actions, а не одним value + action
+    # на меню: у «Перезагрузить» их две, и walker должен видеть обе, чтобы
+    # развесить по разным клавишам (см. providers.actions ниже).
+    #
+    # Пароля ничего из этого не спросит: в политике polkit у logind
+    # и poweroff/reboot, и set-reboot-to-firmware-setup идут с
+    # allow_active = yes, а elephant крутится в активной локальной сессии.
+    [[entries]]
+    text = "Выключить"
+    icon = "system-shutdown-symbolic"
+    keywords = [ "poweroff", "shutdown", "выключить", "выключение" ]
+
+    [entries.actions]
+    run = "${systemctl} poweroff"
+
+    [[entries]]
+    text = "Перезагрузить"
+    icon = "system-reboot-symbolic"
+    keywords = [ "reboot", "restart", "перезагрузка", "ребут", "uefi", "bios" ]
+
+    [entries.actions]
+    run = "${systemctl} reboot"
+    # Просит firmware поднять при следующем старте setup-интерфейс (флаг
+    # OsIndications в EFI). `bootctl status` на этом ноуте подтверждает
+    # поддержку: "Boot into FW: supported".
+    firmware = "${systemctl} reboot --firmware-setup"
+  '';
+
   services.walker = {
     enable = true;
+
+    # menus в дефолтном наборе — иначе меню питания достижимо только через
+    # префикс. Список задаётся целиком: walker подменяет providers.default
+    # своим значением, а не дополняет вшитый (в отличие от providers.prefixes,
+    # которые он мержит по имени провайдера).
+    settings.providers = {
+      default = [
+        "desktopapplications"
+        "calc"
+        "websearch"
+        "menus"
+      ];
+
+      # Клавиши для действий меню питания. Ключ — полное имя провайдера
+      # вместе с именем меню: ровно то, что elephant кладёт в item.provider
+      # и по чему walker ищет привязки. Вшитый набор он мержит по имени
+      # действия, так что fallback-действия (back, clear hist) остаются.
+      actions."menus:power" = [
+        {
+          action = "run";
+          bind = "Return";
+          # Обязательно, а не для красоты: пункт, у которого действий больше
+          # одного, walker активирует мышью только через default = true —
+          # без него activate_default() падает на unwrap().
+          default = true;
+        }
+        {
+          action = "firmware";
+          bind = "ctrl Return";
+          label = "в UEFI";
+        }
+      ];
+    };
 
     # Холодный старт GTK4 заметен глазом, поэтому walker живёт демоном, а
     # Mod+D запускает клиент, который будит уже поднятый процесс. Тот же
@@ -567,6 +640,7 @@ in
       ConditionEnvironment = "WAYLAND_DISPLAY";
       X-Restart-Triggers = [
         "${config.xdg.configFile."elephant/elephant.toml".source}"
+        "${config.xdg.configFile."elephant/menus/power.toml".source}"
       ];
     };
 
